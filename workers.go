@@ -15,23 +15,15 @@ var (
 	JobQueue chan Job
 )
 
-type PayloadCollection struct {
-	WindowsVersion string    `json:"version"`
-	Token          string    `json:"token"`
-	Payloads       []Payload `json:"data"`
-}
-
-type Payload struct {
-	// [redacted]
-}
-
-func (this Payload) DoWork() error {
-	return nil
+type JobCollection struct {
+	WindowsVersion string `json:"version"`
+	Token          string `json:"token"`
+	Jobs           []Job  `json:"data"`
 }
 
 // Job represents the job to be run
-type Job struct {
-	Payload Payload
+type Job interface {
+	Execute() error
 }
 
 // Worker represents the worker that executes the job
@@ -59,7 +51,7 @@ func (w Worker) Start() {
 			select {
 			case job := <-w.JobChannel:
 				// we have received a work request.
-				if err := job.Payload.DoWork(); err != nil {
+				if err := job.Execute(); err != nil {
 					log.Printf("Error uploading to S3: %s", err.Error())
 				}
 
